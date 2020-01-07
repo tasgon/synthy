@@ -8,20 +8,29 @@ use ggez::event::{self, EventHandler, KeyCode, KeyMods, MouseButton};
 use ggez::graphics;
 use ggez::nalgebra as na;
 use ggez::{Context, GameResult};
+use std::path::PathBuf;
+
+mod assets;
 
 struct MainState {
     pos_x: f32,
     imgui_wrapper: ImGuiWrapper,
     hidpi_factor: f32,
+    main_assets: assets::Assets,
 }
 
 impl MainState {
     fn new(mut ctx: &mut Context, hidpi_factor: f32) -> GameResult<MainState> {
         let imgui_wrapper = ImGuiWrapper::new(&mut ctx);
+        let main_assets = assets::Assets::new(
+            ctx,
+            &std::path::Path::new("/home/me/Code/me/Rust/synthy/assets"),
+        );
         let s = MainState {
             pos_x: 0.0,
             imgui_wrapper,
             hidpi_factor,
+            main_assets,
         };
         Ok(s)
     }
@@ -38,7 +47,7 @@ impl EventHandler for MainState {
 
         // Render game stuff
         {
-            let circle = graphics::Mesh::new_circle(
+            /*let circle = graphics::Mesh::new_circle(
                 ctx,
                 graphics::DrawMode::fill(),
                 na::Point2::new(self.pos_x, 380.0),
@@ -46,7 +55,12 @@ impl EventHandler for MainState {
                 2.0,
                 graphics::WHITE,
             )?;
-            graphics::draw(ctx, &circle, (na::Point2::new(0.0, 0.0),))?;
+            graphics::draw(ctx, &circle, (na::Point2::new(0.0, 0.0),))?;*/
+            graphics::draw(
+                ctx,
+                &self.main_assets.white_key,
+                (na::Point2::new(self.pos_x, 0.0),),
+            )?;
         }
 
         // Render game ui

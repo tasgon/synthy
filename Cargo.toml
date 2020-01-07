@@ -1,14 +1,16 @@
 [package]
-name = "imgui-ggez-starter"
+name = "synthy"
 version = "0.1.0"
-authors = ["oliviaifrim"]
+authors = ["telastrus"]
 edition = "2018"
 
 [dependencies]
-ggez = "0.5.0"
+ggez = "0.5"
 
 gfx_core = "0.9"
 gfx_device_gl = "0.16"
 
 imgui = "0.2"
 imgui-gfx-renderer = "0.2"
+
+resvg = { version = "0.8", features = ["raqote-backend"] }
