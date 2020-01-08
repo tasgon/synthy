@@ -113,6 +113,7 @@ impl ImGuiWrapper {
         .build(&ui, || {
           // Your window stuff here!
           ui.text(im_str!("Hi from this label!"));
+          ui.text(im_str!("FPS: {:.2}", ggez::timer::fps(ctx)));
         });
       ui.show_demo_window(&mut show);
     }

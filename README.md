@@ -2,17 +2,15 @@
 
 Basically the title. Also, nothing's implemented. Based on a modified version of [`iolivia/imgui-ggez-starter`](https://github.com/iolivia/imgui-ggez-starter) (modifications found [here](https://github.com/telastrus/imgui-ggez-starter)).
 
-## :running: How to run it?
-The usual cargo commands will do. 
+## Running
 
 ```rust
-// Building
 cargo build
 
-// Running 
+// Run with debug
 cargo run
 
-// Running in release
+// Run fast
 cargo run --release
 ```
 

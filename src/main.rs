@@ -43,7 +43,15 @@ impl EventHandler for MainState {
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
-        graphics::clear(ctx, graphics::BLACK);
+        graphics::clear(
+            ctx,
+            graphics::Color {
+                r: 0.3,
+                g: 1.0,
+                b: 0.3,
+                a: 1.0,
+            },
+        );
 
         // Render game stuff
         {
@@ -56,11 +64,8 @@ impl EventHandler for MainState {
                 graphics::WHITE,
             )?;
             graphics::draw(ctx, &circle, (na::Point2::new(0.0, 0.0),))?;*/
-            graphics::draw(
-                ctx,
-                &self.main_assets.white_key,
-                (na::Point2::new(self.pos_x, 0.0),),
-            )?;
+            self.main_assets
+                .draw_piano(ctx, (na::Point2::new(0.0, 0.0),));
         }
 
         // Render game ui
@@ -131,8 +136,8 @@ impl EventHandler for MainState {
 }
 
 pub fn main() -> ggez::GameResult {
-    let cb = ggez::ContextBuilder::new("super_simple with imgui", "ggez")
-        .window_setup(conf::WindowSetup::default().title("super_simple with imgui"))
+    let cb = ggez::ContextBuilder::new("synthy", "telastrus")
+        .window_setup(conf::WindowSetup::default().vsync(false).title("synthy."))
         .window_mode(
             conf::WindowMode::default().resizable(true), /*.dimensions(750.0, 500.0)*/
         );
