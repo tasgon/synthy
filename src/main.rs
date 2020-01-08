@@ -11,12 +11,14 @@ use ggez::{Context, GameResult};
 use std::path::PathBuf;
 
 mod assets;
+mod keyboard;
 
 struct MainState {
     pos_x: f32,
     imgui_wrapper: ImGuiWrapper,
     hidpi_factor: f32,
     main_assets: assets::Assets,
+    board: keyboard::Keyboard,
 }
 
 impl MainState {
@@ -26,11 +28,13 @@ impl MainState {
             ctx,
             &std::path::Path::new("/home/me/Code/me/Rust/synthy/assets"),
         );
+        let board = keyboard::Keyboard::new();
         let s = MainState {
             pos_x: 0.0,
             imgui_wrapper,
             hidpi_factor,
             main_assets,
+            board,
         };
         Ok(s)
     }
@@ -55,15 +59,6 @@ impl EventHandler for MainState {
 
         // Render game stuff
         {
-            /*let circle = graphics::Mesh::new_circle(
-                ctx,
-                graphics::DrawMode::fill(),
-                na::Point2::new(self.pos_x, 380.0),
-                100.0,
-                2.0,
-                graphics::WHITE,
-            )?;
-            graphics::draw(ctx, &circle, (na::Point2::new(0.0, 0.0),))?;*/
             self.main_assets
                 .draw_piano(ctx, (na::Point2::new(0.0, 0.0),));
         }
@@ -137,7 +132,7 @@ impl EventHandler for MainState {
 
 pub fn main() -> ggez::GameResult {
     let cb = ggez::ContextBuilder::new("synthy", "telastrus")
-        .window_setup(conf::WindowSetup::default().vsync(false).title("synthy."))
+        .window_setup(conf::WindowSetup::default().title("synthy."))
         .window_mode(
             conf::WindowMode::default().resizable(true), /*.dimensions(750.0, 500.0)*/
         );
