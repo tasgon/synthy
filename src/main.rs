@@ -9,6 +9,7 @@ use ggez::graphics;
 use ggez::nalgebra as na;
 use ggez::{Context, GameResult};
 use std::path::PathBuf;
+use std::sync::Arc;
 
 mod assets;
 mod keyboard;
@@ -17,18 +18,18 @@ struct MainState {
     pos_x: f32,
     imgui_wrapper: ImGuiWrapper,
     hidpi_factor: f32,
-    main_assets: assets::Assets,
+    main_assets: Arc<assets::Assets>,
     board: keyboard::Keyboard,
 }
 
 impl MainState {
     fn new(mut ctx: &mut Context, hidpi_factor: f32) -> GameResult<MainState> {
         let imgui_wrapper = ImGuiWrapper::new(&mut ctx);
-        let main_assets = assets::Assets::new(
+        let main_assets = Arc::new(assets::Assets::new(
             ctx,
             &std::path::Path::new("/home/me/Code/me/Rust/synthy/assets"),
-        );
-        let board = keyboard::Keyboard::new();
+        ));
+        let board = keyboard::Keyboard::new(main_assets.clone());
         let s = MainState {
             pos_x: 0.0,
             imgui_wrapper,
@@ -59,8 +60,7 @@ impl EventHandler for MainState {
 
         // Render game stuff
         {
-            self.main_assets
-                .draw_piano(ctx, (na::Point2::new(0.0, 0.0),));
+            self.board.draw_piano(ctx, (na::Point2::new(0.0, 0.0),));
         }
 
         // Render game ui
