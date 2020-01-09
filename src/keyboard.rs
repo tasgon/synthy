@@ -27,7 +27,7 @@ pub struct Key {
 }
 
 pub struct Keyboard {
-    conn: MidiInputConnection<()>,
+    conn: Option<MidiInputConnection<()>>,
     active_keys: Arc<Mutex<[bool; 88]>>,
     assets: Arc<Assets>,
     active_sprites: BaseKeyboard,
@@ -37,34 +37,28 @@ impl Keyboard {
     pub fn new(assets: Arc<Assets>) -> Self {
         let midi_in = MidiInput::new("synthy reader").unwrap();
         let ports = midi_in.ports();
-        let port = ports.iter().last().unwrap();
-        println!("Connected to {:?}", midi_in.port_name(port));
         let active_keys = Arc::new(Mutex::new([false; 88]));
         let keys = active_keys.clone();
-        let conn = midi_in
-            .connect(
-                port,
-                "synthy-read-input",
-                move |stamp, message, _| {
-                    let mut data = keys.lock().unwrap();
-                    data[(message[1] - 21) as usize] = message[0] == 144;
-                    //println!("{}: {:?} (len = {})", stamp, message, message.len());
-                    /*println!(
-                        "{}",
-                        data.iter()
-                            .map(|v| {
-                                if *v {
-                                    'X'
-                                } else {
-                                    'O'
-                                }
-                            })
-                            .collect::<String>()
-                    )*/
-                },
-                (),
-            )
-            .unwrap();
+        let conn = match ports.iter().last() {
+            Some(port) => {
+                println!("Connected to {:?}", midi_in.port_name(port));
+                midi_in
+                    .connect(
+                        port,
+                        "synthy-read-input",
+                        move |stamp, message, _| {
+                            let mut data = keys.lock().unwrap();
+                            data[(message[1] - 21) as usize] = message[0] == 144;
+                        },
+                        (),
+                    )
+                    .ok()
+            }
+            None => {
+                println!("Unable to connect to a keyboard!");
+                None
+            }
+        };
         let active_sprites = (
             SpriteBatch::new(assets.white_key_active.clone()),
             SpriteBatch::new(assets.black_key_active.clone()),

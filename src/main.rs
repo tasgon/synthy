@@ -14,7 +14,7 @@ use std::sync::Arc;
 mod assets;
 mod keyboard;
 
-static SONG: &[u8] = include_bytes!("/home/me/Downloads/for_elise_by_beethoven.mid");
+static SONG: &[u8] = include_bytes!("../demo_files/for_elise_by_beethoven.mid");
 
 struct MainState {
     imgui_wrapper: ImGuiWrapper,
@@ -26,15 +26,12 @@ struct MainState {
 impl MainState {
     fn new(mut ctx: &mut Context, hidpi_factor: f32) -> GameResult<MainState> {
         let imgui_wrapper = ImGuiWrapper::new(&mut ctx);
-        let main_assets = Arc::new(assets::Assets::new(
-            ctx,
-            &std::path::Path::new("/home/me/Code/me/Rust/synthy/assets"),
-        ));
+        let main_assets = Arc::new(assets::Assets::new(ctx, &std::path::Path::new("assets")));
         let board = keyboard::Keyboard::new(main_assets.clone());
         let smf: midly::Smf = midly::Smf::parse(SONG).unwrap();
-        smf.tracks
-            .iter()
-            .for_each(|t| t.iter().for_each(|v| println!("{:?}", v)));
+        //smf.tracks
+        //    .iter()
+        //    .for_each(|t| t.iter().for_each(|v| println!("{:?}", v)));
         let s = MainState {
             imgui_wrapper,
             hidpi_factor,
