@@ -14,8 +14,9 @@ use std::sync::Arc;
 mod assets;
 mod keyboard;
 
+static SONG: &[u8] = include_bytes!("/home/me/Downloads/for_elise_by_beethoven.mid");
+
 struct MainState {
-    pos_x: f32,
     imgui_wrapper: ImGuiWrapper,
     hidpi_factor: f32,
     main_assets: Arc<assets::Assets>,
@@ -30,8 +31,11 @@ impl MainState {
             &std::path::Path::new("/home/me/Code/me/Rust/synthy/assets"),
         ));
         let board = keyboard::Keyboard::new(main_assets.clone());
+        let smf: midly::Smf = midly::Smf::parse(SONG).unwrap();
+        smf.tracks
+            .iter()
+            .for_each(|t| t.iter().for_each(|v| println!("{:?}", v)));
         let s = MainState {
-            pos_x: 0.0,
             imgui_wrapper,
             hidpi_factor,
             main_assets,
@@ -43,7 +47,6 @@ impl MainState {
 
 impl EventHandler for MainState {
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
-        self.pos_x = self.pos_x % 800.0 + 1.0;
         Ok(())
     }
 
@@ -60,7 +63,9 @@ impl EventHandler for MainState {
 
         // Render game stuff
         {
-            self.board.draw_piano(ctx, (na::Point2::new(0.0, 0.0),));
+            let rect = ggez::graphics::screen_coordinates(ctx);
+            self.board
+                .draw_piano(ctx, (na::Point2::new(0.0, rect.h * 0.85),));
         }
 
         // Render game ui
@@ -121,11 +126,9 @@ impl EventHandler for MainState {
     fn resize_event(&mut self, ctx: &mut Context, width: f32, height: f32) {
         graphics::set_screen_coordinates(ctx, graphics::Rect::new(0.0, 0.0, width, height))
             .unwrap();
-        //println!("{:?}", graphics::screen_coordinates(ctx));
     }
 
     fn mouse_wheel_event(&mut self, _ctx: &mut Context, x: f32, y: f32) {
-        println!("{}, {}", x, y);
         self.imgui_wrapper.update_scroll(x, y);
     }
 }

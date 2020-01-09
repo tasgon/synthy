@@ -18,3 +18,5 @@ resvg = { version = "0.8", features = ["raqote-backend"] }
 midir = { git = "https://github.com/Boddlnagg/midir" }
 
 arrayvec = "0.5"
+
+midly = "0.3"

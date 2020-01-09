@@ -102,7 +102,7 @@ impl Keyboard {
             }
         }
         let mut p: ggez::graphics::DrawParam = params.into();
-        p.scale = na::Vector2::new(rect.w / (width as f32), rect.w * 0.1 / height).into();
+        p.scale = na::Vector2::new(rect.w / (width as f32), rect.h * 0.15 / height).into();
         ggez::graphics::draw(ctx, white, p.clone()).unwrap();
         ggez::graphics::draw(ctx, &self.active_sprites.0, p.clone()).unwrap();
         ggez::graphics::draw(ctx, black, p.clone()).unwrap();

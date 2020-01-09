@@ -6,7 +6,6 @@ use std::path::{Path, PathBuf};
 
 use arrayvec::ArrayVec;
 use ggez::graphics::spritebatch::SpriteBatch;
-use ggez::graphics::Canvas;
 use ggez::graphics::Image;
 use ggez::nalgebra as na;
 
@@ -46,7 +45,7 @@ impl Assets {
         let black_key = render_img(ctx, p.join("black_key.svg"));
         let white_key_active = render_img(ctx, p.join("white_key_active.svg"));
         let black_key_active = render_img(ctx, p.join("black_key_active.svg"));
-        let (keyboard, keymap) = Self::gen_piano(ctx, &white_key, &black_key);
+        let (keyboard, keymap) = Self::gen_piano(&white_key, &black_key);
         Self {
             white_key,
             black_key,
@@ -58,7 +57,6 @@ impl Assets {
     }
 
     pub fn gen_piano(
-        ctx: &mut ggez::Context,
         white_key: &Image,
         black_key: &Image,
     ) -> ((SpriteBatch, SpriteBatch), ArrayVec<[Key; 100]>) {
