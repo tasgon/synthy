@@ -2,6 +2,7 @@ use midir::MidiInput;
 use midir::MidiInputConnection;
 use std::sync::{Arc, Mutex};
 
+use ggez::graphics::screen_coordinates;
 use ggez::graphics::spritebatch::SpriteBatch;
 use ggez::nalgebra as na;
 
@@ -77,29 +78,47 @@ impl Keyboard {
         params: T,
     ) {
         let assets = &self.assets;
-        let rect = ggez::graphics::screen_coordinates(ctx);
+        let rect = screen_coordinates(ctx);
         let width = assets.white_key.width() * 52;
         let height = assets.white_key.height() as f32;
         let (white, black) = &assets.keyboard;
-        //let (mut wa, mut ba) = &self.active_sprites;
-        self.active_sprites.0.clear();
-        self.active_sprites.1.clear();
+        let (wa, ba) = &mut self.active_sprites;
+        wa.clear();
+        ba.clear();
         let keys = self.active_keys.lock().unwrap();
         for i in 0..88 {
             if keys[i] {
                 let props: Key = assets.keymap[i];
                 let c = (props.offset,);
                 match props.key_type {
-                    KeyType::WHITE => self.active_sprites.0.add(c),
-                    KeyType::BLACK => self.active_sprites.1.add(c),
+                    KeyType::WHITE => wa.add(c),
+                    KeyType::BLACK => ba.add(c),
                 };
             }
         }
         let mut p: ggez::graphics::DrawParam = params.into();
         p.scale = na::Vector2::new(rect.w / (width as f32), rect.h * 0.15 / height).into();
         ggez::graphics::draw(ctx, white, p.clone()).unwrap();
-        ggez::graphics::draw(ctx, &self.active_sprites.0, p.clone()).unwrap();
+        ggez::graphics::draw(ctx, wa, p.clone()).unwrap();
         ggez::graphics::draw(ctx, black, p.clone()).unwrap();
-        ggez::graphics::draw(ctx, &self.active_sprites.1, p).unwrap();
+        ggez::graphics::draw(ctx, ba, p).unwrap();
     }
 }
+
+/*impl Drawable for Keyboard {
+    fn draw(&self, ctx: &mut Context, param: DrawParam) -> GameResult<()> {
+        Ok(())
+    }
+
+    fn dimensions(&self, ctx: &mut Context) -> Option<Rect> {
+        let mut rect = screen_coordinates(ctx);
+        rect.h *= 0.15;
+        Some(rect)
+    }
+
+    fn set_blend_mode(&mut self, _mode: Option<BlendMode>) {}
+
+    fn blend_mode(&self) -> Option<BlendMode> {
+        None
+    }
+}*/

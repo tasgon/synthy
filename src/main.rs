@@ -13,8 +13,8 @@ use std::sync::Arc;
 
 mod assets;
 mod keyboard;
-
-static SONG: &[u8] = include_bytes!("../demo_files/for_elise_by_beethoven.mid");
+mod midi_interpreter;
+mod song;
 
 struct MainState {
     imgui_wrapper: ImGuiWrapper,
@@ -28,7 +28,7 @@ impl MainState {
         let imgui_wrapper = ImGuiWrapper::new(&mut ctx);
         let main_assets = Arc::new(assets::Assets::new(ctx, &std::path::Path::new("assets")));
         let board = keyboard::Keyboard::new(main_assets.clone());
-        let smf: midly::Smf = midly::Smf::parse(SONG).unwrap();
+        let song = song::Song::new("demo_files/for_elise_by_beethoven.mid");
         //smf.tracks
         //    .iter()
         //    .for_each(|t| t.iter().for_each(|v| println!("{:?}", v)));
