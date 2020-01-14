@@ -2,15 +2,43 @@ use midly::Smf;
 use midly::{Event, EventKind, MidiMessage};
 use std::fs;
 use std::path::PathBuf;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crate::midi_interpreter::{as_merged, to_abstime};
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 struct Tile {
     note: u8,
     start: u32,
     length: Duration,
+}
+
+#[derive(Debug, Copy, Clone)]
+struct TickingTile<'a> {
+    reference: &'a Instant,
+    note: u8,
+    start: Duration,
+    length: Duration,
+}
+
+impl<'a> TickingTile<'a> {
+    pub fn new(reference: &'a Instant, tile: Tile) -> Self {
+        let Tile {
+            note,
+            start,
+            length,
+        } = tile;
+        Self {
+            reference,
+            note,
+            start: Duration::from_millis(start.into()),
+            length,
+        }
+    }
+
+    pub fn time_to_activate(&self) -> Duration {
+        (*self.reference + self.start).saturating_duration_since(Instant::now())
+    }
 }
 
 pub struct Song {
@@ -23,6 +51,17 @@ impl Song {
         let mut tiles = Self::process(target.clone());
         tiles.sort_by_key(|i| i.start);
         tiles.iter().for_each(|i| println!("{:?}", i));
+        /*std::thread::spawn(move || {
+            let reference = Instant::now();
+            let ticker = tiles
+                .iter()
+                .map(|v| TickingTile::new(&reference, *v))
+                .last()
+                .unwrap();
+            loop {
+                println!("{:?}", ticker.time_to_activate());
+            }
+        });*/
         Self { target }
     }
 
@@ -52,6 +91,7 @@ impl Song {
                                 length,
                             };
                             tiles.push(tile);
+                            starts[idx as usize] = None;
                         }
                     }
                     _ => (),
