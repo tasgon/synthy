@@ -6,21 +6,27 @@ use crate::imgui_wrapper::ImGuiWrapper;
 use ggez::conf;
 use ggez::event::{self, EventHandler, KeyCode, KeyMods, MouseButton};
 use ggez::graphics;
+use ggez::graphics::DrawParam;
 use ggez::nalgebra as na;
 use ggez::{Context, GameResult};
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::time::Instant;
 
 mod assets;
 mod keyboard;
 mod midi_interpreter;
 mod song;
 
+use keyboard::{Key, KeyType};
+
 struct MainState {
     imgui_wrapper: ImGuiWrapper,
     hidpi_factor: f32,
     main_assets: Arc<assets::Assets>,
     board: keyboard::Keyboard,
+    current_song: song::Song,
+    reference: Instant,
 }
 
 impl MainState {
@@ -28,15 +34,18 @@ impl MainState {
         let imgui_wrapper = ImGuiWrapper::new(&mut ctx);
         let main_assets = Arc::new(assets::Assets::new(ctx, &std::path::Path::new("assets")));
         let board = keyboard::Keyboard::new(main_assets.clone());
-        let song = song::Song::new("demo_files/for_elise_by_beethoven.mid");
+        let current_song = song::Song::new("demo_files/for_elise_by_beethoven.mid");
         //smf.tracks
         //    .iter()
         //    .for_each(|t| t.iter().for_each(|v| println!("{:?}", v)));
+        let reference = Instant::now();
         let s = MainState {
             imgui_wrapper,
             hidpi_factor,
             main_assets,
             board,
+            current_song,
+            reference,
         };
         Ok(s)
     }
@@ -61,8 +70,37 @@ impl EventHandler for MainState {
         // Render game stuff
         {
             let rect = ggez::graphics::screen_coordinates(ctx);
-            self.board
-                .draw_piano(ctx, (na::Point2::new(0.0, rect.h * 0.85),));
+            let hfac = rect.h * 0.85;
+
+            let width_scale = rect.w / (self.main_assets.white_key.width() as f32 * 52f32);
+            let keymap = &self.main_assets.keymap;
+            for tile in self
+                .current_song
+                .tiles
+                .iter()
+                .filter(|x| x.in_scope(&self.reference))
+            {
+                let key: Key = keymap[tile.note as usize];
+                let fac = tile.vertical_height(hfac) / self.main_assets.white_key.height() as f32;
+                let dest = na::Point2::new(
+                    key.offset.x * width_scale, //This is stupid
+                    rect.h - tile.vertical_position(&self.reference, rect.h),
+                );
+                //println!("{} - {:?}", tile.note, dest);
+                graphics::draw(
+                    ctx,
+                    match key.key_type {
+                        KeyType::WHITE => &self.main_assets.white_key,
+                        KeyType::BLACK => &self.main_assets.black_key,
+                    },
+                    DrawParam::new()
+                        .dest(dest)
+                        .scale(na::Vector2::new(width_scale, fac)),
+                )
+                .unwrap();
+            }
+
+            self.board.draw_piano(ctx, (na::Point2::new(0.0, hfac),));
         }
 
         // Render game ui
