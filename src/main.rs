@@ -100,7 +100,13 @@ impl EventHandler for MainState {
                 .unwrap();
             }
 
-            self.board.draw_piano(ctx, (na::Point2::new(0.0, hfac),));
+            self.board.draw_piano(
+                ctx,
+                (
+                    na::Point2::new(0.0, hfac),
+                    graphics::Color::new(1.0, 1.0, 1.0, 0.0),
+                ),
+            );
         }
 
         // Render game ui

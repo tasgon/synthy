@@ -26,7 +26,15 @@ impl Tile {
     }
 
     pub fn vertical_position(&self, reference: &Instant, height: f32) -> f32 {
-        height * self.time_to_die(reference).as_secs_f32() / DELTA_T.as_secs_f32()
+        let t1 = *reference + self.start + self.length;
+        let now = Instant::now();
+        let (ttk, dir) = if t1 > now {
+            (t1.duration_since(now), 1)
+        } else {
+            (now.duration_since(t1), -1)
+        };
+
+        height * (dir as f32) * ttk.as_secs_f32() / DELTA_T.as_secs_f32()
             + self.vertical_height(height)
     }
 
@@ -37,7 +45,7 @@ impl Tile {
     }
 
     pub fn is_dead(&self, reference: &Instant) -> bool {
-        (*reference + self.start + self.length)
+        (*reference + self.start + self.length + DELTA_T)
             .checked_duration_since(Instant::now())
             .is_none()
     }
