@@ -6,8 +6,8 @@ use std::time::{Duration, Instant};
 
 use crate::midi_interpreter::{as_merged, to_abstime};
 
-static DELTA_T: Duration = Duration::from_millis(1000 as u64);
-static AFTERIMAGE: Duration = Duration::from_millis(1000 as u64);
+static DELTA_T: Duration = Duration::from_millis(2000 as u64);
+//static AFTERIMAGE: Duration = Duration::from_millis(1000 as u64);
 
 #[derive(Debug, Copy, Clone)]
 pub struct Tile {
@@ -26,16 +26,7 @@ impl Tile {
     }
 
     pub fn vertical_position(&self, reference: &Instant, height: f32) -> f32 {
-        let t1 = *reference + self.start + self.length;
-        let now = Instant::now();
-        let (ttk, dir) = if t1 > now {
-            (t1.duration_since(now), 1)
-        } else {
-            (now.duration_since(t1), -1)
-        };
-
-        height * (dir as f32) * ttk.as_secs_f32() / DELTA_T.as_secs_f32()
-            + self.vertical_height(height)
+        height * (1.0 - self.time_to_die(reference).as_secs_f32() / DELTA_T.as_secs_f32())
     }
 
     pub fn is_alive(&self, reference: &Instant) -> bool {
@@ -45,7 +36,7 @@ impl Tile {
     }
 
     pub fn is_dead(&self, reference: &Instant) -> bool {
-        (*reference + self.start + self.length + DELTA_T)
+        (*reference + self.start + self.length)
             .checked_duration_since(Instant::now())
             .is_none()
     }
@@ -55,7 +46,7 @@ impl Tile {
     }
 
     pub fn vertical_height(&self, height: f32) -> f32 {
-        self.length.as_secs_f32() / (DELTA_T.as_secs_f32() / height)
+        height * self.length.as_secs_f32() / DELTA_T.as_secs_f32()
     }
 }
 

@@ -9,6 +9,7 @@ use ggez::graphics;
 use ggez::graphics::DrawParam;
 use ggez::nalgebra as na;
 use ggez::{Context, GameResult};
+use imgui::{im_str, Window};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Instant;
@@ -34,7 +35,7 @@ impl MainState {
         let imgui_wrapper = ImGuiWrapper::new(&mut ctx);
         let main_assets = Arc::new(assets::Assets::new(ctx, &std::path::Path::new("assets")));
         let board = keyboard::Keyboard::new(main_assets.clone());
-        let current_song = song::Song::new("demo_files/for_elise_by_beethoven.mid");
+        let current_song = song::Song::new("/home/me/Downloads/Again.mid");
         //smf.tracks
         //    .iter()
         //    .for_each(|t| t.iter().for_each(|v| println!("{:?}", v)));
@@ -84,7 +85,7 @@ impl EventHandler for MainState {
                 let fac = tile.vertical_height(hfac) / self.main_assets.white_key.height() as f32;
                 let dest = na::Point2::new(
                     key.offset.x * width_scale, //This is stupid
-                    rect.h - tile.vertical_position(&self.reference, rect.h),
+                    tile.vertical_position(&self.reference, rect.h),
                 );
                 //println!("{} - {:?}", tile.note, dest);
                 graphics::draw(
@@ -111,7 +112,17 @@ impl EventHandler for MainState {
 
         // Render game ui
         {
-            self.imgui_wrapper.render(ctx, self.hidpi_factor);
+            let fps = ggez::timer::fps(ctx);
+            self.imgui_wrapper.render(ctx, self.hidpi_factor, |ui| {
+                imgui::Window::new(im_str!("Hello world"))
+                    .size([300.0, 600.0], imgui::Condition::FirstUseEver)
+                    .position([50.0, 50.0], imgui::Condition::FirstUseEver)
+                    .build(ui, || {
+                        // Your window stuff here!
+                        ui.text(im_str!("Hi from this label!"));
+                        ui.text(im_str!("FPS: {:.2}", fps));
+                    });
+            });
         }
 
         graphics::present(ctx)?;
