@@ -10,6 +10,7 @@ use ggez::graphics::DrawParam;
 use ggez::nalgebra as na;
 use ggez::{Context, GameResult};
 use imgui::{im_str, Window};
+use std::convert::TryInto;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Instant;
@@ -54,6 +55,7 @@ impl MainState {
 
 impl EventHandler for MainState {
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
+        self.current_song.update(&self.reference);
         Ok(())
     }
 
@@ -75,12 +77,7 @@ impl EventHandler for MainState {
 
             let width_scale = rect.w / (self.main_assets.white_key.width() as f32 * 52f32);
             let keymap = &self.main_assets.keymap;
-            for tile in self
-                .current_song
-                .tiles
-                .iter()
-                .filter(|x| x.in_scope(&self.reference))
-            {
+            for tile in self.current_song.active_tiles.iter() {
                 let key: Key = keymap[tile.note as usize];
                 let fac = tile.vertical_height(hfac) / self.main_assets.white_key.height() as f32;
                 let dest = na::Point2::new(
@@ -113,14 +110,20 @@ impl EventHandler for MainState {
         // Render game ui
         {
             let fps = ggez::timer::fps(ctx);
+            let i: i32 = song::deltat().as_millis().try_into().unwrap();
             self.imgui_wrapper.render(ctx, self.hidpi_factor, |ui| {
                 imgui::Window::new(im_str!("Hello world"))
                     .size([300.0, 600.0], imgui::Condition::FirstUseEver)
                     .position([50.0, 50.0], imgui::Condition::FirstUseEver)
-                    .build(ui, || {
+                    .build(ui, move || {
                         // Your window stuff here!
+                        let mut j: i32 = i;
                         ui.text(im_str!("Hi from this label!"));
                         ui.text(im_str!("FPS: {:.2}", fps));
+                        ui.input_int(im_str!("dt"), &mut j).build();
+                        if i != j {
+                            song::set_deltat(j as u64);
+                        }
                     });
             });
         }

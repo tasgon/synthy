@@ -6,8 +6,19 @@ use std::time::{Duration, Instant};
 
 use crate::midi_interpreter::{as_merged, to_abstime};
 
-static DELTA_T: Duration = Duration::from_millis(2000 as u64);
+//static mut MILLIS: u32 = 2000;
+static mut DELTA_T: Duration = Duration::from_millis(2000 as u64);
 //static AFTERIMAGE: Duration = Duration::from_millis(1000 as u64);
+
+pub fn deltat() -> Duration {
+    unsafe { DELTA_T }
+}
+
+pub fn set_deltat(ms: impl Into<u64>) {
+    unsafe {
+        DELTA_T = Duration::from_millis(ms.into());
+    }
+}
 
 #[derive(Debug, Copy, Clone)]
 pub struct Tile {
@@ -26,11 +37,11 @@ impl Tile {
     }
 
     pub fn vertical_position(&self, reference: &Instant, height: f32) -> f32 {
-        height * (1.0 - self.time_to_die(reference).as_secs_f32() / DELTA_T.as_secs_f32())
+        height * (1.0 - self.time_to_die(reference).as_secs_f32() / deltat().as_secs_f32())
     }
 
     pub fn is_alive(&self, reference: &Instant) -> bool {
-        (*reference + self.start - DELTA_T)
+        (*reference + self.start - deltat())
             .checked_duration_since(Instant::now())
             .is_none()
     }
@@ -46,55 +57,11 @@ impl Tile {
     }
 
     pub fn vertical_height(&self, height: f32) -> f32 {
-        height * self.length.as_secs_f32() / DELTA_T.as_secs_f32()
+        height * self.length.as_secs_f32() / deltat().as_secs_f32()
     }
 }
 
-/*#[derive(Debug, Copy, Clone)]
-struct TickingTile<'a> {
-    reference: &'a Instant,
-    note: u8,
-    start: Duration,
-    length: Duration,
-}
-
-impl<'a> TickingTile<'a> {
-    pub fn new(reference: &'a Instant, tile: Tile) -> Self {
-        let Tile {
-            note,
-            start,
-            length,
-        } = tile;
-        Self {
-            reference,
-            note,
-            start,
-            length,
-        }
-    }
-
-    /*pub fn from_iter<T: Iterator<Item = Tile>>(reference: &'a Instant, iter: T) -> impl Iterator {
-        iter.map(|v| Self::new(reference, v.clone()))
-    }*/
-
-    pub fn time_to_activate(&self) -> Duration {
-        (*self.reference + self.start).saturating_duration_since(Instant::now())
-    }
-
-    pub fn time_to_die(&self) -> Duration {
-        (*self.reference + self.start + DELTA_T).saturating_duration_since(Instant::now())
-    }
-
-    pub fn vertical_position(&self, height: f32) -> f32 {
-        self.time_to_die().as_secs_f32() / (DELTA_T.as_secs_f32() / height)
-    }
-
-    pub fn vertical_height(&self, height: f32) -> f32 {
-        self.length.as_secs_f32() / (DELTA_T.as_secs_f32() / height)
-    }
-}*/
-
-pub fn key_index(val: midly::number::u7) -> usize {
+pub fn key_index<T: Into<u8>>(val: T) -> usize {
     let idx: u8 = val.into();
     idx as usize - 21
 }
@@ -102,13 +69,26 @@ pub fn key_index(val: midly::number::u7) -> usize {
 pub struct Song {
     pub target: PathBuf,
     pub tiles: Vec<Tile>,
+    pending_tiles: Vec<Tile>,
+    pub active_tiles: Vec<Tile>,
+    //pub reference: Instant,
 }
 
 impl Song {
     pub fn new<T: Into<PathBuf>>(tgt: T) -> Self {
         let target = tgt.into();
-        let tiles = Self::process(target.clone());
-        Self { target, tiles }
+        let mut tiles = Self::process(target.clone());
+        tiles.sort_by_key(|i| i.start);
+        let mut pending_tiles = tiles.clone();
+        let len = tiles.len();
+        pending_tiles.reverse();
+        Self {
+            target,
+            tiles,
+            pending_tiles,
+            active_tiles: Vec::with_capacity(len),
+            //reference: Instant::now(),
+        }
     }
 
     fn process(target: PathBuf) -> Vec<Tile> {
@@ -149,5 +129,26 @@ impl Song {
             }
         }
         tiles
+    }
+
+    pub fn update(&mut self, reference: &Instant) {
+        //let mut v: Vec<Tile> = Vec::with_capacity(self.tiles.len());
+        while self
+            .pending_tiles
+            .last()
+            .map(|i| i.is_alive(reference))
+            .unwrap_or(false)
+        {
+            self.active_tiles.push(self.pending_tiles.pop().unwrap());
+        }
+
+        while self
+            .active_tiles
+            .get(0)
+            .map(|i| i.is_dead(reference))
+            .unwrap_or(false)
+        {
+            self.active_tiles.remove(0);
+        }
     }
 }

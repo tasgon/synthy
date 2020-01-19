@@ -23,4 +23,4 @@ midly = "0.3"
 
 #chrono = "0.4"
 
-#synthrs = { git = "https://github.com/gyng/synthrs" }
+synthrs = { git = "https://github.com/gyng/synthrs" }

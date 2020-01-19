@@ -28,6 +28,7 @@ pub struct Key {
 }
 
 pub struct Keyboard {
+    #[allow(dead_code)]
     conn: Option<MidiInputConnection<()>>,
     active_keys: Arc<Mutex<[bool; 88]>>,
     assets: Arc<Assets>,
@@ -36,39 +37,51 @@ pub struct Keyboard {
 
 impl Keyboard {
     pub fn new(assets: Arc<Assets>) -> Self {
-        let midi_in = MidiInput::new("synthy reader").unwrap();
-        let ports = midi_in.ports();
         let active_keys = Arc::new(Mutex::new([false; 88]));
-        let keys = active_keys.clone();
-        let conn = match ports.iter().last() {
-            Some(port) => {
-                println!("Connected to {:?}", midi_in.port_name(port));
-                midi_in
-                    .connect(
-                        port,
-                        "synthy-read-input",
-                        move |stamp, message, _| {
-                            let mut data = keys.lock().unwrap();
-                            data[(message[1] - 21) as usize] = message[0] == 144;
-                        },
-                        (),
-                    )
-                    .ok()
-            }
-            None => {
-                println!("Unable to connect to a keyboard!");
-                None
-            }
-        };
         let active_sprites = (
             SpriteBatch::new(assets.white_key_active.clone()),
             SpriteBatch::new(assets.black_key_active.clone()),
         );
-        Self {
-            conn,
-            active_keys,
-            assets,
-            active_sprites,
+        match MidiInput::new("synthy reader") {
+            Ok(midi_in) => {
+                let ports = midi_in.ports();
+                let keys = active_keys.clone();
+                let conn = match ports.iter().last() {
+                    Some(port) => {
+                        println!("Connected to {:?}", midi_in.port_name(port));
+                        midi_in
+                            .connect(
+                                port,
+                                "synthy-read-input",
+                                move |_, message, _| {
+                                    let mut data = keys.lock().unwrap();
+                                    data[(message[1] - 21) as usize] = message[0] == 144;
+                                },
+                                (),
+                            )
+                            .ok()
+                    }
+                    None => {
+                        println!("Unable to connect to a keyboard!");
+                        None
+                    }
+                };
+                Self {
+                    conn,
+                    active_keys,
+                    assets,
+                    active_sprites,
+                }
+            }
+            Err(e) => {
+                println!("Unable to begin establishing a key: {:?}", e);
+                Self {
+                    conn: None,
+                    active_keys,
+                    assets,
+                    active_sprites,
+                }
+            }
         }
     }
 
