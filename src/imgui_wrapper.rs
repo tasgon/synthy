@@ -81,7 +81,7 @@ impl ImGuiWrapper {
             mouse_state: MouseState::default(),
         }
     }
-    pub fn render<T: Fn(&Ui)>(&mut self, ctx: &mut Context, hidpi_factor: f32, ui_fn: T) {
+    pub fn render<T: FnMut(&Ui)>(&mut self, ctx: &mut Context, hidpi_factor: f32, mut ui_fn: T) {
         // Update mouse
         self.update_mouse();
         // Create new frame
@@ -93,9 +93,9 @@ impl ImGuiWrapper {
         self.imgui.io_mut().display_size = [draw_width, draw_height];
         self.imgui.io_mut().display_framebuffer_scale = [hidpi_factor, hidpi_factor];
         self.imgui.io_mut().delta_time = delta_s;
-        let ui = self.imgui.frame();
+        let mut ui = self.imgui.frame();
         // Window
-        ui_fn(&ui);
+        ui_fn(&mut ui);
         // Render
         let (factory, _, encoder, _, render_target) = graphics::gfx_objects(ctx);
         let draw_data = ui.render();

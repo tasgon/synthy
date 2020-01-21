@@ -113,21 +113,26 @@ impl EventHandler for MainState {
         if self.show_ui {
             let fps = ggez::timer::fps(ctx);
             let i: i32 = song::deltat().as_millis().try_into().unwrap();
-            self.imgui_wrapper.render(ctx, self.hidpi_factor, |ui| {
-                imgui::Window::new(im_str!("Hello world"))
-                    .size([300.0, 600.0], imgui::Condition::FirstUseEver)
-                    .position([50.0, 50.0], imgui::Condition::FirstUseEver)
-                    .build(ui, move || {
-                        // Your window stuff here!
-                        let mut j: i32 = i;
-                        ui.text(im_str!("Hi from this label!"));
-                        ui.text(im_str!("FPS: {:.2}", fps));
-                        ui.input_int(im_str!("dt"), &mut j).build();
-                        if i != j {
-                            song::set_deltat(j as u64);
-                        }
-                    });
-            });
+            let rt = &mut self.reference;
+            self.imgui_wrapper
+                .render(ctx, self.hidpi_factor, move |ui| {
+                    imgui::Window::new(im_str!("Hello world"))
+                        .size([300.0, 600.0], imgui::Condition::FirstUseEver)
+                        .position([50.0, 50.0], imgui::Condition::FirstUseEver)
+                        .build(ui, || {
+                            // Your window stuff here!
+                            let mut j: i32 = i;
+                            ui.text(im_str!("Hi from this label!"));
+                            ui.text(im_str!("FPS: {:.2}", fps));
+                            ui.input_int(im_str!("dt"), &mut j).build();
+                            if i != j {
+                                song::set_deltat(j as u64);
+                            }
+                            if ui.small_button(im_str!("Reset timer")) {
+                                *rt = Instant::now();
+                            }
+                        });
+                });
         }
 
         graphics::present(ctx)?;
