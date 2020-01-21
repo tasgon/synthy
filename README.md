@@ -1,4 +1,4 @@
-# Synthy: osu for pianos
+# Synthy: guitar hero for pianos
 
 Basically the title. Also, nothing's implemented. Based on a modified version of [`iolivia/imgui-ggez-starter`](https://github.com/iolivia/imgui-ggez-starter) (modifications found [here](https://github.com/telastrus/imgui-ggez-starter)).
 
@@ -20,4 +20,4 @@ Basically, use reason.
 
 ## License
 
-Undecided yet.
+Undecided yet. For now, all rights reserved.
