@@ -29,6 +29,7 @@ struct MainState {
     board: keyboard::Keyboard,
     current_song: song::Song,
     reference: Instant,
+    show_ui: bool,
 }
 
 impl MainState {
@@ -48,6 +49,7 @@ impl MainState {
             board,
             current_song,
             reference,
+            show_ui: true,
         };
         Ok(s)
     }
@@ -108,7 +110,7 @@ impl EventHandler for MainState {
         }
 
         // Render game ui
-        {
+        if self.show_ui {
             let fps = ggez::timer::fps(ctx);
             let i: i32 = song::deltat().as_millis().try_into().unwrap();
             self.imgui_wrapper.render(ctx, self.hidpi_factor, |ui| {
@@ -167,6 +169,9 @@ impl EventHandler for MainState {
         keymods: KeyMods,
         _repeat: bool,
     ) {
+        if keycode == KeyCode::Escape {
+            self.show_ui = !self.show_ui;
+        }
         self.imgui_wrapper.update_key_down(keycode, keymods);
     }
 
