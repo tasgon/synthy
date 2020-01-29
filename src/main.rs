@@ -9,13 +9,13 @@ use ggez::graphics;
 use ggez::graphics::DrawParam;
 use ggez::nalgebra as na;
 use ggez::{Context, GameResult};
-use imgui::{im_str, Window};
+use imgui::im_str;
 use std::convert::TryInto;
-use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Instant;
 
 mod assets;
+//mod event_mgr;
 mod keyboard;
 mod midi_interpreter;
 mod song;
@@ -38,9 +38,6 @@ impl MainState {
         let main_assets = Arc::new(assets::Assets::new(ctx, &std::path::Path::new("assets")));
         let board = keyboard::Keyboard::new(main_assets.clone());
         let current_song = song::Song::new("/home/me/Downloads/Again.mid");
-        //smf.tracks
-        //    .iter()
-        //    .for_each(|t| t.iter().for_each(|v| println!("{:?}", v)));
         let reference = Instant::now();
         let s = MainState {
             imgui_wrapper,
@@ -83,10 +80,9 @@ impl EventHandler for MainState {
                 let key: Key = keymap[tile.note as usize];
                 let fac = tile.vertical_height(hfac) / self.main_assets.white_key.height() as f32;
                 let dest = na::Point2::new(
-                    key.offset.x * width_scale, //This is stupid
+                    key.offset.x * width_scale, //TODO: clean this up
                     tile.vertical_position(&self.reference, rect.h),
                 );
-                //println!("{} - {:?}", tile.note, dest);
                 graphics::draw(
                     ctx,
                     match key.key_type {
@@ -120,7 +116,6 @@ impl EventHandler for MainState {
                         .size([300.0, 600.0], imgui::Condition::FirstUseEver)
                         .position([50.0, 50.0], imgui::Condition::FirstUseEver)
                         .build(ui, || {
-                            // Your window stuff here!
                             let mut j: i32 = i;
                             ui.text(im_str!("Hi from this label!"));
                             ui.text(im_str!("FPS: {:.2}", fps));
@@ -134,6 +129,13 @@ impl EventHandler for MainState {
                         });
                 });
         }
+
+        graphics::draw(
+            ctx,
+            &graphics::Text::new("fragment: F"),
+            (na::Point2::new(10.0, 10.0),),
+        )
+        .unwrap();
 
         graphics::present(ctx)?;
         Ok(())

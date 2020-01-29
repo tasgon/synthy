@@ -11,6 +11,8 @@ use ggez::nalgebra as na;
 
 use crate::keyboard::{BaseKeyboard, Key, KeyType, LAYOUT};
 
+/// Render an svg to a raqote `DrawTarget`
+/// so we can get it as a &[u8] to upload to a texture.
 pub fn render_svg(path: PathBuf) -> DrawTarget {
     let mut opt = resvg::Options::default();
     opt.usvg.path = Some(path.clone());
@@ -19,6 +21,7 @@ pub fn render_svg(path: PathBuf) -> DrawTarget {
     img
 }
 
+/// Create a ggez `Image` from a path.
 pub fn render_img(ctx: &mut ggez::Context, path: PathBuf) -> Image {
     let mut img = render_svg(path);
     Image::from_rgba8(
@@ -56,6 +59,8 @@ impl Assets {
         }
     }
 
+    // TODO: move this to `keyboard`.
+    // It's kinda awkward having the keyboard generation code here, but the rendering there.
     pub fn gen_piano(
         white_key: &Image,
         black_key: &Image,
@@ -68,7 +73,6 @@ impl Assets {
         let mut keymap: ArrayVec<[Key; 100]> = ArrayVec::new();
         for i in LAYOUT.chars() {
             if i == 'W' {
-                //println!("{}", pos);
                 let pt = na::Point2::new(pos as f32, 0.0);
                 white_batch.add((pt,));
                 pos += white_dist;

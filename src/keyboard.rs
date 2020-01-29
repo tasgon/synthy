@@ -28,6 +28,7 @@ pub struct Key {
 }
 
 pub struct Keyboard {
+    // We need to keep a handle to this, otherwise it'll get dropped and our thread with it.
     #[allow(dead_code)]
     conn: Option<MidiInputConnection<()>>,
     active_keys: Arc<Mutex<[bool; 88]>>,
@@ -117,21 +118,3 @@ impl Keyboard {
         ggez::graphics::draw(ctx, ba, p).unwrap();
     }
 }
-
-/*impl Drawable for Keyboard {
-    fn draw(&self, ctx: &mut Context, param: DrawParam) -> GameResult<()> {
-        Ok(())
-    }
-
-    fn dimensions(&self, ctx: &mut Context) -> Option<Rect> {
-        let mut rect = screen_coordinates(ctx);
-        rect.h *= 0.15;
-        Some(rect)
-    }
-
-    fn set_blend_mode(&mut self, _mode: Option<BlendMode>) {}
-
-    fn blend_mode(&self) -> Option<BlendMode> {
-        None
-    }
-}*/

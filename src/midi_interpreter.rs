@@ -1,6 +1,9 @@
 use midly::{Event, EventKind, MetaMessage};
 use std::vec::Vec;
 
+// Algorithms and concepts taken from  'https://github.com/mido/mido/', covered by the MIT license
+
+/// Convert all events' delay items from relative to absolute timings.
 pub fn to_abstime(v: Vec<Event<'_>>) -> Vec<Event<'_>> {
     let mut now: u32 = 0;
     v.iter()
@@ -14,6 +17,7 @@ pub fn to_abstime(v: Vec<Event<'_>>) -> Vec<Event<'_>> {
         .collect()
 }
 
+/// Convert all events' delay items from absolute to relative timings.
 pub fn to_reltime(v: Vec<Event<'_>>) -> Vec<Event<'_>> {
     let mut now: u32 = 0;
     v.iter()
@@ -27,6 +31,7 @@ pub fn to_reltime(v: Vec<Event<'_>>) -> Vec<Event<'_>> {
         .collect()
 }
 
+/// Remove all extra `EndOfTrack` messages.
 pub fn fix_track_end(v: Vec<Event<'_>>) -> Vec<Event<'_>> {
     let mut out: Vec<Event<'_>> = vec![];
     let mut accum: u32 = 0;
@@ -50,6 +55,7 @@ pub fn fix_track_end(v: Vec<Event<'_>>) -> Vec<Event<'_>> {
     out
 }
 
+/// Convert an array of tracks to one array containing all the events.
 pub fn as_merged(v: Vec<Vec<Event<'_>>>) -> Vec<Event<'_>> {
     let mut messages: Vec<Event<'_>> = vec![];
     v.iter()

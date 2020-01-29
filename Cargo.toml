@@ -24,3 +24,7 @@ midly = "0.3"
 #chrono = "0.4"
 
 synthrs = { git = "https://github.com/gyng/synthrs" }
+
+nfd = "0.0.4"
+
+#winit = "0.20" # Might try to implement in the future, if `apollyon` goes nowhere.

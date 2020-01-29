@@ -6,9 +6,8 @@ use std::time::{Duration, Instant};
 
 use crate::midi_interpreter::{as_merged, to_abstime};
 
-//static mut MILLIS: u32 = 2000;
+// TODO: clean all this up.
 static mut DELTA_T: Duration = Duration::from_millis(2000 as u64);
-//static AFTERIMAGE: Duration = Duration::from_millis(1000 as u64);
 
 pub fn deltat() -> Duration {
     unsafe { DELTA_T }
@@ -71,7 +70,6 @@ pub struct Song {
     pub tiles: Vec<Tile>,
     pending_tiles: Vec<Tile>,
     pub active_tiles: Vec<Tile>,
-    //pub reference: Instant,
 }
 
 impl Song {
@@ -87,7 +85,6 @@ impl Song {
             tiles,
             pending_tiles,
             active_tiles: Vec::with_capacity(len),
-            //reference: Instant::now(),
         }
     }
 
@@ -132,7 +129,6 @@ impl Song {
     }
 
     pub fn update(&mut self, reference: &Instant) {
-        //let mut v: Vec<Tile> = Vec::with_capacity(self.tiles.len());
         while self
             .pending_tiles
             .last()
