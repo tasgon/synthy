@@ -27,7 +27,7 @@ struct MainState {
     hidpi_factor: f32,
     main_assets: Arc<assets::Assets>,
     board: keyboard::Keyboard,
-    current_song: song::Song,
+    current_song: Option<song::Song>,
     reference: Instant,
     show_ui: bool,
 }
@@ -37,14 +37,13 @@ impl MainState {
         let imgui_wrapper = ImGuiWrapper::new(&mut ctx);
         let main_assets = Arc::new(assets::Assets::new(ctx, &std::path::Path::new("assets")));
         let board = keyboard::Keyboard::new(main_assets.clone());
-        let current_song = song::Song::new("/home/me/Downloads/Again.mid");
         let reference = Instant::now();
         let s = MainState {
             imgui_wrapper,
             hidpi_factor,
             main_assets,
             board,
-            current_song,
+            current_song: None,
             reference,
             show_ui: true,
         };
@@ -54,7 +53,9 @@ impl MainState {
 
 impl EventHandler for MainState {
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
-        self.current_song.update(&self.reference);
+        //if let Some(song) = self.song.update(&self.reference);
+        let reference = &self.reference;
+        self.current_song.as_mut().map(|i| i.update(reference));
         Ok(())
     }
 
@@ -76,24 +77,26 @@ impl EventHandler for MainState {
 
             let width_scale = rect.w / (self.main_assets.white_key.width() as f32 * 52f32);
             let keymap = &self.main_assets.keymap;
-            for tile in self.current_song.active_tiles.iter() {
-                let key: Key = keymap[tile.note as usize];
-                let fac = tile.vertical_height(hfac) / self.main_assets.white_key.height() as f32;
-                let dest = na::Point2::new(
-                    key.offset.x * width_scale, //TODO: clean this up
-                    tile.vertical_position(&self.reference, rect.h),
-                );
-                graphics::draw(
-                    ctx,
-                    match key.key_type {
-                        KeyType::WHITE => &self.main_assets.white_key,
-                        KeyType::BLACK => &self.main_assets.black_key,
-                    },
-                    DrawParam::new()
-                        .dest(dest)
-                        .scale(na::Vector2::new(width_scale, fac)),
-                )
-                .unwrap();
+            if let Some(song) = &self.current_song {
+                for tile in song.active_tiles.iter() {
+                    let key: Key = keymap[tile.note as usize];
+                    let fac = tile.vertical_height(hfac) / self.main_assets.white_key.height() as f32;
+                    let dest = na::Point2::new(
+                        key.offset.x * width_scale, //TODO: clean this up
+                        tile.vertical_position(&self.reference, rect.h),
+                    );
+                    graphics::draw(
+                        ctx,
+                        match key.key_type {
+                            KeyType::WHITE => &self.main_assets.white_key,
+                            KeyType::BLACK => &self.main_assets.black_key,
+                        },
+                        DrawParam::new()
+                            .dest(dest)
+                            .scale(na::Vector2::new(width_scale, fac)),
+                    )
+                    .unwrap();
+                }
             }
 
             self.board.draw_piano(
@@ -110,6 +113,7 @@ impl EventHandler for MainState {
             let fps = ggez::timer::fps(ctx);
             let i: i32 = song::deltat().as_millis().try_into().unwrap();
             let rt = &mut self.reference;
+            let song = &mut self.current_song;
             self.imgui_wrapper
                 .render(ctx, self.hidpi_factor, move |ui| {
                     imgui::Window::new(im_str!("Hello world"))
@@ -119,12 +123,19 @@ impl EventHandler for MainState {
                             let mut j: i32 = i;
                             ui.text(im_str!("Hi from this label!"));
                             ui.text(im_str!("FPS: {:.2}", fps));
-                            ui.input_int(im_str!("dt"), &mut j).build();
+                            ui.input_int(im_str!("delta-t"), &mut j).build();
                             if i != j {
                                 song::set_deltat(j as u64);
                             }
                             if ui.small_button(im_str!("Reset timer")) {
                                 *rt = Instant::now();
+                            }
+                            if ui.small_button(im_str!("Load song")) {
+                                let res = nfd2::dialog().open().unwrap();
+                                if let nfd2::Response::Okay(path) = res {
+                                    *song = Some(song::Song::new(path));
+                                    *rt = Instant::now();
+                                }
                             }
                         });
                 });
